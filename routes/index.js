@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var multer = require('multer');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -47,6 +48,10 @@ router.get('/tables.ejs', function(req, res, next) {
   res.render('tables');
 });
 
+router.get('/uploadFile.ejs', function(req, res, next) {
+  res.render('uploadFile');
+});
+
 router.get('/utilities-animation.ejs', function(req, res, next) {
   res.render('utilities-animation');
 });
@@ -60,4 +65,43 @@ router.get('/utilities-color.ejs', function(req, res, next) {
 router.get('/utilities-other.ejs', function(req, res, next) {
   res.render('utilities-other');
 });
+
+//----------------
+var storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, 'upload');
+  },
+  filename: function(req, file, cb) {
+    cb(null, Date.now() + Math.random() + file.originalname);
+  },
+
+});
+
+var upload = multer( {
+  storage: storage,
+  limits: {fileSize: 2*1024*1024},
+  fileFilter: function (req, file, cb){
+    var ten = file.originalname;
+    if(ten.indexOf('.jpg') > -1){
+      cb(null, true);
+    }else {
+      cb(new Error("Duoi file phai la JPG"), false);
+    }
+  }
+}).array('file', 6);
+
+router.post('/upload', function (req, res) {
+  upload(req, res, function (err){
+    if(err != null){
+      res.send(err.message)
+    }else {
+      var tieude = req.body.tieude;
+      var noidung = req.body.noidung;
+      var file = req.files;
+      res.json({tieude: tieude, noidung: noidung, file: file});
+    }
+  })
+})
+
 module.exports = router;
+
